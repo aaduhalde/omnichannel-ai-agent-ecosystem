@@ -1,4 +1,4 @@
-# 📱 WhatsApp Activity Control System
+# WhatsApp Activity Control System
 
 ![Cloudflare Workers](https://img.shields.io/badge/Backend-Cloudflare%20Workers-f38020?style=flat&logo=cloudflare)
 ![WhatsApp API](https://img.shields.io/badge/API-WhatsApp%20Cloud%20API-25D366?style=flat&logo=whatsapp)
