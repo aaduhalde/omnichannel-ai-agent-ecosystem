@@ -1,35 +1,29 @@
-# WhatsApp Activity Control System
+# WhatsApp Business Ecosystem 🚀
 
-![Cloudflare Workers](https://img.shields.io/badge/Backend-Cloudflare%20Workers-f38020?style=flat&logo=cloudflare)
-![WhatsApp API](https://img.shields.io/badge/API-WhatsApp%20Cloud%20API-25D366?style=flat&logo=whatsapp)
-![Google Sheets](https://img.shields.io/badge/Storage-Google%20Sheets-34A853?style=flat&logo=googlesheets)
-![License](https://img.shields.io/badge/License-MIT-yellow.svg)
+[![Cloudflare Workers](https://img.shields.io/badge/Edge-Cloudflare%20Workers-f38020?style=flat&logo=cloudflare)](https://workers.cloudflare.com/)
+[![WhatsApp API](https://img.shields.io/badge/API-WhatsApp%20Cloud%20API-25D366?style=flat&logo=whatsapp)](https://business.whatsapp.com/)
+[![Node.js](https://img.shields.io/badge/Runtime-Node.js-339933?style=flat&logo=nodedotjs)](https://nodejs.org/)
+[![JavaScript](https://img.shields.io/badge/Language-JavaScript-F7DF1E?style=flat&logo=javascript)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
+[![n8n](https://img.shields.io/badge/Workflow-n8n-FF6D5A?style=flat&logo=n8n)](https://n8n.io/)
+[![Chatwoot](https://img.shields.io/badge/CRM-Chatwoot-1F2937?style=flat&logo=chatwoot)](https://www.chatwoot.com/)
+[![Google Sheets](https://img.shields.io/badge/Storage-Google%20Sheets-34A853?style=flat&logo=googlesheets)](https://www.google.com/sheets/about/)
 
-Sistema MVP de **control de asistencia, geolocalización y registro de actividades** diseñado para personal en campo. Utiliza la infraestructura oficial de **WhatsApp Cloud API** para garantizar estabilidad y cumplimiento total de las normas de Meta, eliminando riesgos de baneo.
-
----
-
-## Descripción del Sistema
-Este ecosistema permite a las organizaciones gestionar la jornada laboral de equipos remotos directamente desde WhatsApp. Los empleados registran su entrada, salida y actividades diarias mediante comandos simples. La inteligencia del sistema reside en un **Cloudflare Worker** que procesa los mensajes y los sincroniza con **Google Sheets** en tiempo real.
-
-
+Este repositorio centraliza la arquitectura técnica y funcional de un ecosistema integral de automatización para **WhatsApp Business**. El sistema está diseñado para escalar operaciones comerciales mediante el uso de tecnologías de borde (Edge Computing) y flujos de trabajo inteligentes.
 
 ---
 
-## Arquitectura Técnica (100% Serverless)
-* **Backend:** Cloudflare Workers (Runtime de JavaScript en el Edge).
-* **Webhook:** WhatsApp Cloud API oficial (Meta for Developers).
-* **Almacenamiento:** Google Sheets API (vía Apps Script o Service Account).
-* **Seguridad:** Validación de firmas de Meta y manejo de secretos encriptados.
+## 🏗️ Arquitectura del Ecosistema
 
-### Estructura del Repositorio
-```text
-/project-whatsapp-attendance
-│── /src
-│   ├── worker.js           # Lógica principal del Worker
-│   ├── webhook.js          # Validación de Webhook de Meta
-│   ├── services/           # Conexión con Google Sheets
-│   └── logic/              # Procesamiento de comandos (Check-in/out)
-│── /docs                   # Documentación técnica detallada
-│── /examples               # Plantillas de mensajes y Sheets
-│── README.md
+La solución integra tres pilares fundamentales que conviven en una infraestructura de alta disponibilidad:
+
+### Diagrama de Flujo Técnico
+```mermaid
+graph TD
+    A[WhatsApp Cloud API] -->|Webhooks| B(Cloudflare Workers)
+    B -->|Filtrado y Seguridad| C{Core Node.js Engine}
+    C -->|Módulo 1| D[Activity Control]
+    C -->|Módulo 2| E[Lead Automation]
+    C -->|Módulo 3| F[Booking System]
+    D & E & F --> G[n8n Orquestador]
+    G --> H[CRM / Google Sheets]
+    C --> I[Chatwoot Inbox]
