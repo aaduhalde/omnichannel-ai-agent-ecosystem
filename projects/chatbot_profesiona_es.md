@@ -53,3 +53,23 @@ Respuesta automática:
 2️⃣ Solicitar presupuesto
 3️⃣ Hablar con asesor
 ```
+
+Si el cliente selecciona “Solicitar presupuesto”:
+```text
+Perfecto, necesito algunos datos:
+
+📌 Nombre:
+📌 Servicio de interés:
+📌 Ciudad:
+```
+
+## El sistema:
+
+- Valida información
+- Registra datos en base
+- Notifica al vendedor
+- Envía confirmación automática
+
+```text
+✅ Gracias. Un asesor te contactará en breve.
+```
