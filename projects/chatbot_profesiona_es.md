@@ -55,7 +55,7 @@ Respuesta automática:
 ```
 
 Si el cliente selecciona “Solicitar presupuesto”:
-```mermaid
+```text
 Perfecto, necesito algunos datos:
 
 📌 Nombre:
@@ -73,3 +73,99 @@ Perfecto, necesito algunos datos:
 ```text
 ✅ Gracias. Un asesor te contactará en breve.
 ```
+
+---
+
+# Modelos de Implementación
+
+El sistema puede desplegarse en dos modalidades técnicas.
+
+---
+
+# 🖥️ 1️⃣ Modalidad Local (Self-Hosted)
+
+Implementación instalada en una computadora del cliente que permanece encendida 24/7 con conexión estable.
+
+## Arquitectura
+
+```mermaid
+flowchart LR
+A[Cliente WhatsApp] --> B[Canal WhatsApp]
+B --> C[Webhook en PC Local]
+C --> D[Motor Node.js]
+D --> E[Google Sheets / DB Local]
+D --> F[Respuesta automática]
+```
+
+## Características
+
+- Node.js ejecutándose localmente
+- Webhook expuesto con IP pública o túnel seguro
+- Registro en Google Sheets o base local
+
+## Ventajas
+
+- Bajo costo inicial
+- Ideal para pruebas o MVP
+
+## Limitaciones
+
+- Dependencia de conexión doméstica
+- Riesgo ante cortes eléctricos
+- Escalabilidad limitada
+
+# ☁️ 2️⃣ Modalidad Cloud (VPS + API Oficial)
+
+Arquitectura profesional desplegada en servidor VPS utilizando:
+
+- WhatsApp Cloud API
+- Chatwoot
+- n8n
+- Base de datos externa
+
+Arquitectura Completa
+```mermaid
+flowchart LR
+A[Cliente WhatsApp] --> B[WhatsApp Cloud API]
+B --> C[Webhook en VPS]
+C --> D[Motor Conversacional Node.js]
+D --> E[n8n Workflows]
+E --> F[CRM / Google Sheets / DB]
+D --> G[Chatwoot Inbox]
+G --> H[Agente Humano]
+D --> I[Respuesta automática]
+```
+# Componentes
+WhatsApp Cloud API
+
+- Canal oficial aprobado
+- Manejo de plantillas
+- Ventana de conversación de 24 horas
+
+VPS
+
+- Servidor Linux
+- PM2 o Docker
+- Certificado SSL
+
+n8n
+
+- Automatización avanzada
+- Integraciones con APIs externas
+
+Chatwoot
+
+- Bandeja de entrada multicanal
+- Asignación de agentes
+- Historial completo
+
+# Comparativa Técnica
+| Característica | Modalidad Local    | Modalidad Cloud        |
+| -------------- | ------------------ | ---------------------- |
+| Costo Inicial  | Bajo               | Medio                  |
+| Disponibilidad | Depende del equipo | Alta (24/7)            |
+| Escalabilidad  | Limitada           | Alta                   |
+| Seguridad      | Básica             | Profesional            |
+| Integraciones  | Básicas            | Avanzadas              |
+| Ideal para     | Negocio pequeño    | Empresa en crecimiento |
+
