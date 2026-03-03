@@ -55,7 +55,7 @@ Respuesta automática:
 ```
 
 Si el cliente selecciona “Solicitar presupuesto”:
-```text
+```mermaid
 Perfecto, necesito algunos datos:
 
 📌 Nombre:
