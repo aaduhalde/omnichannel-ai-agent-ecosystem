@@ -40,12 +40,12 @@ Este sistema automatiza y estructura la comunicación para convertir conversacio
 ## Escenario de Conversación
 
 Cliente escribe:
-Hola
+- Hola
 
 Respuesta automática:
-👋 Bienvenido.
-¿Cómo podemos ayudarte?
+- 👋 Bienvenido.
+- ¿Cómo podemos ayudarte?
 
-1️⃣ Ver servicios
-2️⃣ Solicitar presupuesto
-3️⃣ Hablar con asesor
+- 1️⃣ Ver servicios
+- 2️⃣ Solicitar presupuesto
+- 3️⃣ Hablar con asesor
