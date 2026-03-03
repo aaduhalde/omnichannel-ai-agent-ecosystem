@@ -1,1 +1,0 @@
-[![n8n](https://img.shields.io/badge/Workflow-n8n-FF6D5A?style=flat&logo=n8n)](https://n8n.io/)

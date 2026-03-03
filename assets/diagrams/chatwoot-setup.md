@@ -1,1 +1,0 @@
-[![Chatwoot](https://img.shields.io/badge/CRM-Chatwoot-1F2937?style=flat&logo=chatwoot)](https://www.chatwoot.com/)
