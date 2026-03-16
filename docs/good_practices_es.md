@@ -59,7 +59,3 @@ Para garantizar la máxima seguridad, dividimos el proyecto en:
 
 > [!CAUTION]
 > **Importante:** La automatización profesional es una herramienta de servicio, no de broadcasting masivo. Siguiendo nuestras reglas y flujos, el riesgo de baneo se reduce drásticamente, protegiendo la comunicación con tus clientes.
-
----
-
-**¿Deseas una auditoría de tus flujos actuales?** [Contáctanos en aadmtech.com](https://aadmtech.com)

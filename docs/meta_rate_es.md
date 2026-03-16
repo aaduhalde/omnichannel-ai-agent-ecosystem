@@ -63,7 +63,3 @@ Para un negocio con **300 chats de servicio** y **100 de marketing**:
 
 > [!IMPORTANT]
 > **Transparencia Total:** Los cargos de Meta e IA se facturan directamente desde sus respectivas plataformas (Meta Business y Provider de IA). Mi servicio se enfoca en la configuración, optimización y mantenimiento de esta infraestructura para que pagues lo mínimo posible.
-
----
-
-**¿Necesitas un cálculo personalizado para tu volumen de mensajes?** [Contáctame para una asesoría técnica.](https://aadmtech.com)
