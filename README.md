@@ -139,12 +139,3 @@ These systems help businesses:
 • avoid losing leads
 • track sales and inquiries
 • automate repetitive tasks
-
----
-
-# Author
-
-Alejandro Adrian Duhalde
-Data & Automation Developer
-
-Specialized in building lightweight automation systems for small and medium businesses.
