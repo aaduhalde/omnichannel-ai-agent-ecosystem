@@ -1,0 +1,6 @@
+date,customer,channel,amount,status
+2026-03-01,Juan,WhatsApp,50,won
+2026-03-01,Ana,Instagram,30,won
+2026-03-01,Pedro,WhatsApp,0,lost
+2026-03-02,Lucia,Web,70,won
+2026-03-02,Carlos,WhatsApp,40,won

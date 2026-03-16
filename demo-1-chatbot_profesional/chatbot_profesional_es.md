@@ -1,10 +1,5 @@
-# WhatsApp Chatbot Profesional  
+# Demo 1 -  WhatsApp Chatbot Profesional  
 ### Solución de Automatización Escalable para Negocios
-
-[![WhatsApp API](https://img.shields.io/badge/Canal-WhatsApp%20Business-25D366?style=flat&logo=whatsapp)](https://business.whatsapp.com/)
-[![Node.js](https://img.shields.io/badge/Runtime-Node.js-339933?style=flat&logo=nodedotjs)](https://nodejs.org/)
-[![Arquitectura](https://img.shields.io/badge/Arquitectura-Modular-blue?style=flat)]
-[![Deployment](https://img.shields.io/badge/Deployment-Local%20%7C%20Cloud-orange?style=flat)]
 
 ---
 
