@@ -1,0 +1,31 @@
+name: Deploy Worker to Cloudflare
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Publish to Cloudflare
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          # Apuntando a la ruta exacta de la Etapa 1
+          command: deploy src/workers/index.js
+        env:
+          GOOGLE_APPS_SCRIPT_WEBAPP_URL: ${{ secrets.GOOGLE_APPS_SCRIPT_WEBAPP_URL }}
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true

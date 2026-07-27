@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Omnichannel AI Agent Ecosystem - Live Demo</title>
+    <link rel="icon" type="image/png" href="https://res.cloudinary.com/dyfttdxme/image/upload/v1775066450/aaduhalde_rjwevw.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .data-gradient { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
+        .card-hover:hover { transform: translateY(-3px); border-color: #3b82f6; transition: all 0.3s ease; }
+    </style>
+</head>
+<body class="data-gradient text-slate-200 min-h-screen flex flex-col justify-between">
+
+    <header class="container mx-auto px-6 pt-10 pb-6 text-center">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-mono uppercase tracking-wider mb-4">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Serverless Architecture Live
+        </div>
+        <h1 class="text-4xl md:text-5xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-indigo-300 to-emerald-400">
+            Omnichannel AI Agent Ecosystem
+        </h1>
+        <p class="text-lg text-slate-400 mb-2 max-w-3xl mx-auto leading-relaxed">
+            AI Automation, Chatbots & Data-Driven Workflows for Business Operations
+        </p>
+        <p class="text-xs font-mono text-blue-400 mb-6">
+            Cloudflare Workers • OpenAI / LLMs • Google Sheets API • Python ETL • Data Warehouse Sync
+        </p>
+        
+    </header>
+
+    <main class="container mx-auto px-6 mb-12">
+        
+        
+        <section class="max-w-3xl mx-auto mb-6">
+            <p class="text-xs text-slate-400 uppercase tracking-wider mb-3 text-center font-mono">
+                Choose:
+            </p>
+            <div class="flex flex-wrap justify-center gap-2">
+                <button onclick="sendQuickPrompt('/ES')" class="bg-slate-800/80 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs px-3 py-1.5 rounded-full transition card-hover">
+                    🇪🇸 Español
+                </button>
+                <button onclick="sendQuickPrompt('/EN')" class="bg-slate-800/80 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs px-3 py-1.5 rounded-full transition card-hover">
+                    🇬🇧 English
+                </button>
+                <button onclick="sendQuickPrompt('DEMO')" class="bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 text-xs px-3 py-1.5 rounded-full transition card-hover">
+                    📥 Demo (Google Sheets API)
+                </button>
+            </div>
+        </section>
+
+        
+        <section id="demo-bot" class="flex flex-col items-center">
+            <div id="chatbot-wrapper" class="w-full max-w-2xl h-[580px] flex flex-col">
+                <div id="chat-window" style="background:white; border:1px solid #334155; border-radius:16px; display:flex; flex-direction:column; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; width: 100%; height: 100%; box-shadow: 0 12px 32px rgba(0,0,0,0.5); overflow:hidden;">
+                    
+                    <!-- Chat Header -->
+                    <div style="background:#2563eb; color:white; padding:16px 20px; font-weight:bold; display:flex; align-items:center; justify-content:space-between; font-size: 15px;">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <div style="width:10px; height:10px; background:#4ade80; border-radius:50%; box-shadow: 0 0 6px #4ade80;"></div>
+                            <span>MARLA — Omnichannel AI Agent Demo</span>
+                        </div>
+                        <button onclick="resetChat()" title="Reiniciar Conversación" style="background:rgba(255,255,255,0.15); border:none; color:white; padding:4px 10px; border-radius:6px; cursor:pointer; font-size:12px; transition:0.2s;">
+                            <i class="fas fa-redo-alt mr-1"></i> Reset
+                        </button>
+                    </div>
+
+                    <!-- Chat Messages Container -->
+                    <div id="chat-messages" style="flex:1; padding:20px; overflow-y:auto; background:#f8f9fa; display:flex; flex-direction:column; gap:12px; color:#333;"></div>
+                    
+                    <!-- Typing Indicator -->
+                    <div id="typing-indicator" style="padding: 10px 20px; font-size: 13px; color: #666; display: none; background: #f8f9fa; font-style: italic;">
+                        MARLA procesando evento... / MARLA processing...
+                    </div>
+                    
+                    <!-- Input Bar -->
+                    <div style="border-top:1px solid #e2e8f0; padding:14px 20px; background:white;">
+                        <input id="chat-input" type="text" placeholder="Escribe un mensaje o prueba una interacción..." style="width:100%; border:none; outline:none; font-size:15px; color:#333; background:transparent;">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+   
+    <footer id="contact" class="border-t border-slate-800 py-8 bg-slate-900/60 text-center text-sm">
+            <div class="flex justify-center items-center gap-8 text-2xl mb-6">
+            <a href="https://aaduhalde.github.io/" title="Home" class="hover:text-blue-500 transition flex items-center justify-center">
+                <i class="fas fa-home"></i>
+            </a>
+            <a href="mailto:aaduhalde@outlook.es" title="Email Me" class="hover:text-blue-500 transition flex items-center justify-center">
+                <i class="fas fa-envelope"></i>
+            </a>
+            <a href="http://www.linkedin.com/in/aaduhalde" target="_blank" title="LinkedIn Profile" class="hover:text-blue-500 transition flex items-center justify-center">
+                <i class="fab fa-linkedin"></i>
+            </a>
+            <a href="https://github.com/aaduhalde/omnichannel-ai-agent-ecosystem" target="_blank" title="GitHub Repositories" class="hover:text-blue-500 transition flex items-center justify-center">
+                <i class="fab fa-github"></i>
+            </a>
+        </div>
+        <p class="text-slate-500 text-xs mb-3">Omnichannel AI Agent Ecosystem</p>
+    </footer>
+
+    <!-- BOT SCRIPT INTEGRATION -->
+    <script>
+        (function() {
+            const workerURL = "https://demo1-chatbot.aaduhalde.workers.dev/";
+            const messages = document.getElementById("chat-messages");
+            const input = document.getElementById("chat-input");
+            const typingIndicator = document.getElementById("typing-indicator");
+
+            let sessionId = localStorage.getItem("chat_session_id");
+            if (!sessionId) {
+                sessionId = "user_" + Math.random().toString(36).substring(2, 9);
+                localStorage.setItem("chat_session_id", sessionId);
+            }
+
+            window.addEventListener('DOMContentLoaded', () => {
+                input.focus();
+                if (messages.children.length === 0) {
+                    sendMessageInit();
+                }
+            });
+
+            function addMessage(sender, text) {
+                const isBot = sender === "Bot";
+                const msgDiv = document.createElement("div");
+                msgDiv.style.alignSelf = isBot ? "flex-start" : "flex-end";
+                msgDiv.style.maxWidth = "85%";
+                msgDiv.style.padding = "12px 16px";
+                msgDiv.style.borderRadius = "12px";
+                msgDiv.style.fontSize = "14px";
+                msgDiv.style.lineHeight = "1.5";
+                msgDiv.style.background = isBot ? "#e9ecef" : "#2563eb";
+                msgDiv.style.color = isBot ? "#333" : "white";
+
+                // Regex para detectar URLs y convertirlas en hipervínculos HTML clicables
+                const urlRegex = /(https?:\/\/[^\s<]+)/g;
+                
+                let formattedText = text
+                    .replace(/\n/g, '<br>')
+                    .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+                    .replace(urlRegex, function(url) {
+                        return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: ${isBot ? '#2563eb' : '#60a5fa'}; text-decoration: underline; font-weight: bold; word-break: break-all;">${url}</a>`;
+                    });
+
+                msgDiv.innerHTML = formattedText;
+                messages.appendChild(msgDiv);
+                messages.scrollTop = messages.scrollHeight;
+            }
+
+            async function sendMessageInit() {
+                typingIndicator.style.display = "block";
+                try {
+                    const response = await fetch(workerURL, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ message: "", userId: sessionId })
+                    });
+                    const data = await response.json();
+                    typingIndicator.style.display = "none";
+                    if (data.reply) addMessage("Bot", data.reply);
+                } catch (err) {
+                    typingIndicator.style.display = "none";
+                }
+            }
+
+            async function sendMessage(text) {
+                addMessage("You", text);
+                typingIndicator.style.display = "block";
+                try {
+                    const response = await fetch(workerURL, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ message: text, userId: sessionId })
+                    });
+                    const data = await response.json();
+                    typingIndicator.style.display = "none";
+                    addMessage("Bot", data.reply || "Error al procesar mensaje.");
+                } catch (err) {
+                    typingIndicator.style.display = "none";
+                    addMessage("Bot", "Error de conexión. Por favor reintenta. 🔌");
+                }
+            }
+
+            window.sendQuickPrompt = function(text) {
+                input.value = "";
+                sendMessage(text);
+            };
+
+            window.resetChat = function() {
+                messages.innerHTML = "";
+                sendMessage("MENU");
+            };
+
+            input.addEventListener("keypress", (e) => {
+                if (e.key === "Enter" && input.value.trim()) {
+                    const text = input.value.trim();
+                    input.value = "";
+                    sendMessage(text);
+                }
+            });
+        })();
+    </script>
+</body>
+</html>
