@@ -8,11 +8,11 @@
 
 ---
 
-## 🚀 Live Demo & Project Overview
+## Live Demo & Project Overview
 
 This repository implements an **Omnichannel AI Agent Ecosystem** designed to handle multi-lingual customer interactions, capture structured leads, and sync data directly to operational data stores in real time via serverless edge computing.
 
-👉 **Interactive Experience:** Load `index.html` to interact live with **MARLA** (Multi-lingual Agentic Responsive Lead Assistant), test AI processing, and execute an automated insertion directly into our live Google Sheets database.
+**Interactive Experience:** Load `index.html` to interact live with **MARLA** (Multi-lingual Agentic Responsive Lead Assistant), test AI processing, and execute an automated insertion directly into our live Google Sheets database.
 
 This project connects directly with the broader data stack:
 - `market-intelligence-data-warehouse` → Centralized storage foundation
@@ -21,7 +21,7 @@ This project connects directly with the broader data stack:
 
 ---
 
-## 💡 Business Problem
+## Business Problem
 
 Many companies struggle with:
 - Manual customer support workflows and slow response times.
@@ -31,7 +31,7 @@ Many companies struggle with:
 
 ---
 
-## ⚙️ Solution & Workflow
+## Solution & Workflow
 
 An automated, serverless pipeline that handles interactions from end to end:
 
@@ -43,7 +43,7 @@ An automated, serverless pipeline that handles interactions from end to end:
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```text
 ┌─────────────────────────┐          ┌─────────────────────────────────┐          ┌───────────────────────────┐
@@ -65,7 +65,7 @@ An automated, serverless pipeline that handles interactions from end to end:
 ```
 ---
 
-## 📂 Repository Structure
+## Repository Structure
 
 ```text
 omnichannel-ai-agent-ecosystemV2/
