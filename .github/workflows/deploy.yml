@@ -24,8 +24,6 @@ jobs:
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          # Apuntando a la ruta exacta de la Etapa 1
-          command: deploy src/workers/index.js
+          command: deploy src/workers/index.js --var GOOGLE_APPS_SCRIPT_WEBAPP_URL:"${{ secrets.GOOGLE_APPS_SCRIPT_WEBAPP_URL }}"
         env:
-          GOOGLE_APPS_SCRIPT_WEBAPP_URL: ${{ secrets.GOOGLE_APPS_SCRIPT_WEBAPP_URL }}
           FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
