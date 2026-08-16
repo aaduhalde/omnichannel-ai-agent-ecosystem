@@ -124,7 +124,6 @@ Successful Execution & Persistence
 User: Alejandro Duhalde -> +51999888777 -> Omnichannel AI Support Integration
 
 MARLA:
-
 ✅ Lead successfully logged!
 
 Your details have been saved to our live Google Sheet.
