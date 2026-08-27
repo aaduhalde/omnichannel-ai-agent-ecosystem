@@ -17,7 +17,7 @@ This repository implements an **Omnichannel AI Agent Ecosystem** designed to han
 This project connects directly with the broader data stack:
 - `market-intelligence-data-warehouse` → Centralized storage foundation
 - `business-intelligence-ops` → Dashboards & analytics reporting
-- `omnichannel-ai-agent-ecosystemV2` → Automation & AI Edge Agents (this repo)
+- `omnichannel-ai-agent-ecosystem` → Automation & AI Edge Agents (this repo)
 
 ---
 
@@ -68,17 +68,17 @@ An automated, serverless pipeline that handles interactions from end to end:
 ## Repository Structure
 
 ```text
-omnichannel-ai-agent-ecosystemV2/
-├── index.html          # Web frontend / Live chat UI (Tailwind CSS)
-├── package.json        # Node.js dependencies and wrangler scripts
-├── README.md           # Project documentation and architecture guide
+omnichannel-ai-agent-ecosystem/
+├── index.html          
+├── package.json        
+├── README.md          
 ├── src/
 │   └── workers/
-│       ├── index.js    # Cloudflare Worker entry point & state machine
+│       ├── index.js   
 │       └── locales/
-│           ├── en.js   # English localization & AI system prompts
-│           └── es.js   # Spanish localization & AI system prompts
-└── wrangler.toml       # Cloudflare Workers configuration & KV bindings
+│           ├── en.js   
+│           └── es.js   
+└── wrangler.toml       
 ```
 ---
 
