@@ -1,0 +1,10 @@
+name = "demo1-chatbot"
+main = "src/workers/index.js"
+compatibility_date = "2026-06-01"
+
+[ai]
+binding = "AI_DEMO"
+
+[[kv_namespaces]]
+binding = "CHAT_STATE_DEMO"
+id = "1c34439ddf4c4e66b1bf646e28c751bf"
