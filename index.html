@@ -1,80 +1,83 @@
-<article class="max-w-4xl mx-auto py-8"></article>
-    <!-- Encabezado de la vista -->
+<article class="max-w-4xl mx-auto py-8">
+    <!-- Botón Back to Main Page -->
     <div class="mb-6">
-        <button onclick="loadPage('home', event)" class="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm font-bold transition mb-6">
+        <button onclick="loadPage('home', event)" class="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm font-bold transition">
             <i class="fas fa-arrow-left"></i> Back to Main Page
         </button>
     </div>
 
-<header class="text-center mb-8">
-    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-mono uppercase tracking-wider mb-4">
-        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Serverless Architecture Live
-    </div>
-    <h1 class="text-4xl md:text-5xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-indigo-300 to-emerald-400">
-        Omnichannel AI Agent Ecosystem
-    </h1>
-    <p class="text-lg text-slate-400 mb-2 max-w-3xl mx-auto leading-relaxed">
-        AI Automation, Chatbots & Data-Driven Workflows for Business Operations
-    </p>
-    <p class="text-xs font-mono text-blue-400 mb-6">
-        Cloudflare Workers • OpenAI / LLMs • Google Sheets API • Python ETL • Data Warehouse Sync
-    </p>
-</header>
+    <!-- HEADER DEL POST -->
+    <header class="text-center mb-8 border-b border-slate-800 pb-8">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-mono uppercase tracking-wider mb-4">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Serverless Architecture Live
+        </div>
+        <h1 class="text-4xl md:text-5xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-indigo-300 to-emerald-400">
+            Omnichannel AI Agent Ecosystem
+        </h1>
+        <p class="text-lg text-slate-400 mb-2 max-w-3xl mx-auto leading-relaxed">
+            AI Automation, Chatbots & Data-Driven Workflows for Business Operations
+        </p>
+        <p class="text-xs font-mono text-blue-400 mb-6">
+            Cloudflare Workers • OpenAI / LLMs • Google Sheets API • Python ETL • Data Warehouse Sync
+        </p>
+    </header>
 
-<section class="max-w-3xl mx-auto mb-6">
-    <p class="text-xs text-slate-400 uppercase tracking-wider mb-3 text-center font-mono">
-        Choose:
-    </p>
-    <div class="flex flex-wrap justify-center gap-2">
-        <button onclick="sendQuickPrompt('/ES')" class="bg-slate-800/80 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs px-3 py-1.5 rounded-full transition card-hover">
-            🇪🇸 Español
-        </button>
-        <button onclick="sendQuickPrompt('/EN')" class="bg-slate-800/80 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs px-3 py-1.5 rounded-full transition card-hover">
-            🇬🇧 English
-        </button>
-        <button onclick="sendQuickPrompt('DEMO')" class="bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 text-xs px-3 py-1.5 rounded-full transition card-hover">
-            📥 Demo (Google Sheets API)
-        </button>
-    </div>
-</section>
+    <!-- QUICK PROMPTS -->
+    <section class="max-w-3xl mx-auto mb-6">
+        <p class="text-xs text-slate-400 uppercase tracking-wider mb-3 text-center font-mono">
+            Choose:
+        </p>
+        <div class="flex flex-wrap justify-center gap-2">
+            <button onclick="sendQuickPrompt('/ES')" class="bg-slate-800/80 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs px-3 py-1.5 rounded-full transition card-hover">
+                🇪🇸 Español
+            </button>
+            <button onclick="sendQuickPrompt('/EN')" class="bg-slate-800/80 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs px-3 py-1.5 rounded-full transition card-hover">
+                🇬🇧 English
+            </button>
+            <button onclick="sendQuickPrompt('DEMO')" class="bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 text-xs px-3 py-1.5 rounded-full transition card-hover">
+                📥 Demo (Google Sheets API)
+            </button>
+        </div>
+    </section>
 
-<section id="demo-bot" class="flex flex-col items-center">
-    <div id="demo-chatbot-wrapper" class="w-full max-w-2xl h-[580px] flex flex-col">
-        <div style="background:white; border:1px solid #334155; border-radius:16px; display:flex; flex-direction:column; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; width: 100%; height: 100%; box-shadow: 0 12px 32px rgba(0,0,0,0.5); overflow:hidden;">
-            
-            <!-- Chat Header -->
-            <div style="background:#2563eb; color:white; padding:16px 20px; font-weight:bold; display:flex; align-items:center; justify-content:space-between; font-size: 15px;">
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <div style="width:10px; height:10px; background:#4ade80; border-radius:50%; box-shadow: 0 0 6px #4ade80;"></div>
-                    <span>MARLA — Omnichannel AI Agent Demo</span>
+    <!-- DEMO BOT -->
+    <section id="demo-bot" class="flex flex-col items-center">
+        <div id="demo-chatbot-wrapper" class="w-full max-w-2xl h-[580px] flex flex-col">
+            <div style="background:white; border:1px solid #334155; border-radius:16px; display:flex; flex-direction:column; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; width: 100%; height: 100%; box-shadow: 0 12px 32px rgba(0,0,0,0.5); overflow:hidden;">
+                
+                <!-- Chat Header -->
+                <div style="background:#2563eb; color:white; padding:16px 20px; font-weight:bold; display:flex; align-items:center; justify-content:space-between; font-size: 15px;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div style="width:10px; height:10px; background:#4ade80; border-radius:50%; box-shadow: 0 0 6px #4ade80;"></div>
+                        <span>MARLA — Omnichannel AI Agent Demo</span>
+                    </div>
+                    <button onclick="resetDemoChat()" title="Reiniciar Conversación" style="background:rgba(255,255,255,0.15); border:none; color:white; padding:4px 10px; border-radius:6px; cursor:pointer; font-size:12px; transition:0.2s;">
+                        <i class="fas fa-redo-alt mr-1"></i> Reset
+                    </button>
                 </div>
-                <button onclick="resetDemoChat()" title="Reiniciar Conversación" style="background:rgba(255,255,255,0.15); border:none; color:white; padding:4px 10px; border-radius:6px; cursor:pointer; font-size:12px; transition:0.2s;">
-                    <i class="fas fa-redo-alt mr-1"></i> Reset
-                </button>
-            </div>
 
-            <!-- Chat Messages Container -->
-            <div id="demo-chat-messages" style="flex:1; padding:20px; overflow-y:auto; background:#f8f9fa; display:flex; flex-direction:column; gap:12px; color:#333;"></div>
-            
-            <!-- Typing Indicator -->
-            <div id="demo-typing-indicator" style="padding: 10px 20px; font-size: 13px; color: #666; display: none; background: #f8f9fa; font-style: italic;">
-                MARLA procesando evento... / MARLA processing...
-            </div>
-            
-            <!-- Input Bar -->
-            <div style="border-top:1px solid #e2e8f0; padding:14px 20px; background:white;">
-                <input id="demo-chat-input" type="text" placeholder="Escribe un mensaje o prueba una interacción..." style="width:100%; border:none; outline:none; font-size:15px; color:#333; background:transparent;">
+                <!-- Chat Messages Container -->
+                <div id="demo-chat-messages" style="flex:1; padding:20px; overflow-y:auto; background:#f8f9fa; display:flex; flex-direction:column; gap:12px; color:#333;"></div>
+                
+                <!-- Typing Indicator -->
+                <div id="demo-typing-indicator" style="padding: 10px 20px; font-size: 13px; color: #666; display: none; background: #f8f9fa; font-style: italic;">
+                    MARLA procesando evento... / MARLA processing...
+                </div>
+                
+                <!-- Input Bar -->
+                <div style="border-top:1px solid #e2e8f0; padding:14px 20px; background:white;">
+                    <input id="demo-chat-input" type="text" placeholder="Escribe un mensaje o prueba una interacción..." style="width:100%; border:none; outline:none; font-size:15px; color:#333; background:transparent;">
+                </div>
             </div>
         </div>
-    </div>
-</section>
+    </section>
 
- <!-- CALL TO ACTION / GITHUB LINK -->
-<div class="mt-8 text-center">
-    <a href="https://github.com/aaduhalde/omnichannel-ai-agent-ecosystem/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-sm font-semibold px-5 py-2.5 rounded-lg transition duration-200 shadow-md">
-        <i class="fab fa-github text-lg"></i> View Repository
-    </a>
-</div>
+    <!-- CALL TO ACTION / GITHUB LINK -->
+    <section class="text-center pt-8 border-t border-slate-800 mt-12">
+        <a href="https://github.com/aaduhalde/omnichannel-ai-agent-ecosystem/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-sm font-semibold px-5 py-2.5 rounded-lg transition duration-200 shadow-md">
+            <i class="fab fa-github text-lg"></i> View Repository
+        </a>
+    </section>
 </article>
 
 <script>
