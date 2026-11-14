@@ -1,23 +1,32 @@
 // =========================================================================
-// 🌐 DICCIONARIOS DE IDIOMA INCORPORADOS
+// 🌐 DICCIONARIOS DE IDIOMA INCORPORADOS 
 // =========================================================================
 const locales = {
   es: {
     langCode: "es",
     welcome: "👋 **Bienvenido a la Demo de 'Omnichannel AI Agent Ecosystem'**\n\nEste entorno demuestra la interacción con un Agente Inteligente capaz de procesar mensajes, clasificar datos y sincronizar Leads en tiempo real.\n\nPor favor, responde con tu opción preferida:\n1️⃣ **Continuar en Español**\n2️⃣ **Continue in English**",
-    intro: "¡Excelente! Estoy lista para mostrarte la arquitectura del ecosistema:\n\n• **Customer Support Automation:** Respuestas automáticas y etiquetado de tickets.\n• **Lead Management:** Captura, clasificación y guardado automático.\n• **Internal Operations:** Flujos de trabajo serverless.\n\nPuedes hacerme cualquier pregunta técnica o escribir **'AGENDAR'** para probar el registro de un Lead.",
-    aiSystemPrompt: `Eres MARLA, la interfaz de demostración de IA para el repositorio 'Omnichannel AI Agent Ecosystem'. Responde de forma técnica, clara y concisa en ESPAÑOL. Al final de CADA respuesta, invita al usuario a escribir "AGENDAR" para probar el flujo.`
+    intro: "¡Excelente! Estoy lista para mostrarte la arquitectura del ecosistema:\n\n• **Customer Support Automation:** Respuestas automáticas y etiquetado de tickets.\n• **Lead Management:** Captura, clasificación y guardado automático.\n• **Internal Operations:** Flujos de trabajo serverless.\n\nPuedes hacerme cualquier pregunta técnica sobre el ecosistema o escribir **'AGENDAR'** para probar el registro de un Lead.",
+    aiSystemPrompt: `Eres MARLA, la interfaz de demostración técnica para el repositorio 'Omnichannel AI Agent Ecosystem'.
+REGLAS ESTRICTAS:
+1. Responde de forma técnica, clara y concisa en ESPAÑOL.
+2. SOLO responde preguntas relacionadas con automatización de procesos, agentes de IA, ingeniería de datos, arquitectura serverless o este repositorio. Si te preguntan temas filosóficos, personales o fuera de contexto (ej. clima, fin del mundo, cocina), declina amablemente y redirige la charla hacia las capacidades del ecosistema.
+3. Al final de CADA respuesta, invita al usuario a escribir "AGENDAR" para probar el flujo de captura de datos.`
   },
   en: {
     langCode: "en",
     welcome: "👋 **Welcome to the 'Omnichannel AI Agent Ecosystem' Live Demo**\n\nThis environment showcases an Intelligent AI Agent processing user inputs and syncing Leads in real time.\n\nPlease select your preferred option:\n1️⃣ **Continuar en Español**\n2️⃣ **Continue in English**",
-    intro: "Awesome! I am ready to demonstrate the core architecture:\n\n• **Customer Support Automation:** Auto-responses and ticket classification.\n• **Lead Management:** Capture, qualification, and structured logging.\n• **Internal Operations:** Serverless workflows.\n\nFeel free to ask any technical question or type **'SCHEDULE'** to test the Lead Capture workflow.",
-    aiSystemPrompt: `You are MARLA, the interactive AI Demo interface for the 'Omnichannel AI Agent Ecosystem'. Respond professionally in ENGLISH. At the end of EVERY response, invite the user to type "SCHEDULE" to test the workflow.`
+    intro: "Awesome! I am ready to demonstrate the core architecture:\n\n• **Customer Support Automation:** Auto-responses and ticket classification.\n• **Lead Management:** Capture, qualification, and structured logging.\n• **Internal Operations:** Serverless workflows.\n\nFeel free to ask any technical question about the ecosystem or type **'SCHEDULE'** to test the Lead Capture workflow.",
+    aiSystemPrompt: `You are MARLA, the technical demo interface for the 'Omnichannel AI Agent Ecosystem' repository.
+STRICT RULES:
+1. Respond technically, clearly, and concisely in ENGLISH.
+2. ONLY answer questions related to process automation, AI agents, data engineering, serverless architecture, or this repository. If asked off-topic questions, politely decline and steer back to the ecosystem capabilities.
+3. At the end of EVERY response, invite the user to type "SCHEDULE" to test the data capture workflow.`
   }
 };
 
 const PUBLIC_GOOGLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/19_ITGf-0SJcMiJMvE5Ih7O7TzCo7bbUdqcHuiiuxn6g/edit?usp=sharing";
-const SESSION_TTL = 300; // 5 minutos de inactividad (en segundos)
+const INACTIVITY_LIMIT_SEC = 300; // 5 minutos exactos de inactividad
+const KV_HARD_TTL_SEC = 86400;    // 24 horas en KV para poder detectar y avisar la expiración
 
 // =========================================================================
 // 🛡️ FUNCIONES DE VALIDACIÓN ESTRICTA (QA)
@@ -38,9 +47,9 @@ function validateField(step, value, lang) {
         return isEn ? "⚠️ Please enter a valid email address (5-150 characters):" : "⚠️ Por favor ingresa un correo electrónico válido (5-150 caracteres):";
       }
       break;
-    case 3: // Teléfono (Mínimo 7 dígitos numéricos/símbolos de teléfono)
-      const phoneClean = v.replace(/[\s\-\+\(\)]/g, "");
-      if (phoneClean.length < 7 || phoneClean.length > 20) {
+    case 3: // Teléfono (Mínimo 7 dígitos numéricos reales)
+      const digitsOnly = v.replace(/\D/g, "");
+      if (digitsOnly.length < 7 || digitsOnly.length > 18 || v.length > 25) {
         return isEn ? "⚠️ Please enter a valid phone number (minimum 7 digits):" : "⚠️ Por favor ingresa un número de teléfono válido (mínimo 7 dígitos):";
       }
       break;
@@ -56,11 +65,24 @@ function validateField(step, value, lang) {
       break;
     case 6: // Mensaje del Proyecto (Máximo 600 caracteres)
       if (v.length === 0 || v.length > 600) {
-        return isEn ? "⚠️ Project message cannot be empty and must be under 600 characters:" : "⚠️ El mensaje no puede estar vacío y debe tener un máximo de 600 caracteres:";
+        return isEn ? `⚠️ Project message must be between 1 and 600 characters (Current: ${v.length}):` : `⚠️ El mensaje debe tener entre 1 y 600 caracteres (Actual: ${v.length}):`;
       }
       break;
   }
-  return null; // Sin errores
+  return null;
+}
+
+// Helper para guardar estado en KV
+async function saveState(env, key, state, now) {
+  await env.CHAT_STATE_DEMO.put(key, JSON.stringify({ state, timestamp: now }), { expirationTtl: KV_HARD_TTL_SEC });
+}
+
+// Helper para responder JSON con CORS
+function jsonResponse(payload, corsHeaders, status = 200) {
+  return new Response(JSON.stringify(payload), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" }
+  });
 }
 
 export default {
@@ -82,43 +104,58 @@ export default {
       const { message, userId, lang: requestedLang } = body;
       const input = (message || "").trim();
       const sessionKey = `user_state:${userId || 'default_user'}`;
+      const now = Math.floor(Date.now() / 1000);
 
-      // ===================================================================
       // 1. PROTECCIÓN CONTRA MENSAJES VACÍOS EN EL ARRANQUE
-      // ===================================================================
+      if (!input) {
+        const defaultLang = requestedLang || "es";
+        const freshState = {
+          step: 0,
+          lang: defaultLang,
+          history: [],
+          hasAutoSummary: false,
+          leadData: { name: "", email: "", phone: "", company: "", country: "", message: "", language: defaultLang }
+        };
+        await saveState(env, sessionKey, freshState, now);
+        return jsonResponse({ reply: locales[defaultLang].welcome }, corsHeaders);
+      }
+
       let rawData = await env.CHAT_STATE_DEMO.get(sessionKey, { type: "json" });
       let userState = rawData?.state;
       const lastAccess = rawData?.timestamp || 0;
-      const now = Math.floor(Date.now() / 1000);
 
-      // ===================================================================
       // 6. CONTROL DE INACTIVIDAD MEJORADO (5 minutos / 300s)
-      // ===================================================================
-      if (userState && userState.step > 0 && (now - lastAccess > SESSION_TTL)) {
-        await env.CHAT_STATE_DEMO.delete(sessionKey);
+      // Detecta inactividad tanto en el formulario como en charla activa con la IA
+      if (userState && (userState.step > 0 || (userState.history && userState.history.length > 0)) && (now - lastAccess > INACTIVITY_LIMIT_SEC)) {
         const expiredLang = userState.lang || "es";
-        const t = locales[expiredLang];
-        const expiredMsg = expiredLang === "en"
-          ? "⏱️ **Session Expired:** Your session was closed due to 5 minutes of inactivity. Let's start over:\n\n" + t.welcome
-          : "⏱️ **Sesión Expirada:** Tu sesión se cerró por 5 minutos de inactividad. Volvamos a empezar:\n\n" + t.welcome;
+        const tExpired = locales[expiredLang];
+        
+        // Reiniciamos el estado manteniendo su idioma previo
+        const resetState = {
+          step: 0,
+          lang: expiredLang,
+          history: [],
+          hasAutoSummary: false,
+          leadData: { name: "", email: "", phone: "", company: "", country: "", message: "", language: expiredLang }
+        };
+        await saveState(env, sessionKey, resetState, now);
 
-        return new Response(JSON.stringify({ reply: expiredMsg }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" }
-        });
+        const expiredMsg = expiredLang === "en"
+          ? `⏱️ **Inactivity Timeout (5 min):** Your session was reset due to inactivity.\n\n${tExpired.welcome}`
+          : `⏱️ **Tiempo de Inactividad Agotado (5 min):** Tu sesión se reinició por inactividad.\n\n${tExpired.welcome}`;
+
+        return jsonResponse({ reply: expiredMsg }, corsHeaders);
       }
 
-      // Si no hay estado previo o el input está vacío al inicio
       if (!userState) {
         userState = {
           step: 0,
           lang: requestedLang || "es",
           history: [],
-          leadData: { name: "", email: "", phone: "", company: "", country: "", message: "", language: "es" }
+          hasAutoSummary: false,
+          leadData: { name: "", email: "", phone: "", company: "", country: "", message: "", language: requestedLang || "es" }
         };
       }
-
-      // Actualizar timestamp de actividad
-      await env.CHAT_STATE_DEMO.put(sessionKey, JSON.stringify({ state: userState, timestamp: now }), { expirationTtl: SESSION_TTL });
 
       const inputUpper = input.toUpperCase();
       let t = locales[userState.lang] || locales.es;
@@ -127,145 +164,208 @@ export default {
       // A. FLUJO DEL FORMULARIO GUIADO (step > 0)
       // ===================================================================
       if (userState.step > 0) {
-        
-        // Comando de salida o cancelación limpia (Opción 8 en pasos de confirmación o cancelar general)
-        if (["CANCELAR", "CANCEL", "EXIT", "MENU", "8"].includes(inputUpper) && userState.step >= 7) {
-          await env.CHAT_STATE_DEMO.delete(sessionKey);
-          return new Response(JSON.stringify({ 
-            reply: userState.lang === "en" ? "Flow cancelled cleanly.\n\n" + t.welcome : "Proceso cancelado limpiamente.\n\n" + t.welcome 
-          }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-        }
 
+        // Escape general en cualquier paso (excepto cuando ya estamos en el menú 7/8 donde '8' tiene su propia lógica)
         if (["CANCELAR", "CANCEL", "EXIT", "MENU"].includes(inputUpper)) {
-          await env.CHAT_STATE_DEMO.delete(sessionKey);
-          return new Response(JSON.stringify({ 
-            reply: userState.lang === "en" ? "Flow cancelled.\n\n" + t.welcome : "Proceso cancelado.\n\n" + t.welcome 
-          }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          userState.step = 0;
+          userState.hasAutoSummary = false;
+          await saveState(env, sessionKey, userState, now);
+          const cancelReply = userState.lang === "en"
+            ? "Process cancelled cleanly. You can continue asking questions or type **'SCHEDULE'** anytime."
+            : "Proceso cancelado limpiamente. Puedes seguir haciendo consultas o escribir **'AGENDAR'** cuando gustes.";
+          return jsonResponse({ reply: cancelReply }, corsHeaders);
         }
 
-        // 3. DOBLE VERIFICACIÓN INTERMEDIA (Correo y Teléfono)
-        // Pasos de confirmación temporal (ej: tras pedir email [paso 2] o teléfono [paso 3])
-        if (userState.step === 2.5 || userState.step === 3.5) {
+        // --- PASO 0.5: APROBACIÓN DEL RESUMEN IA (Si venía de charla previa) ---
+        if (userState.step === 0.5) {
           if (["1", "SÍ", "SI", "YES"].includes(inputUpper)) {
-            // Confirmado, avanzar al siguiente paso real
-            userState.step = userState.step === 2.5 ? 3 : 4;
+            userState.hasAutoSummary = true;
+            userState.step = 1; // Pasamos a pedir Nombre
+            await saveState(env, sessionKey, userState, now);
+            const askName = userState.lang === "en"
+              ? "Great, summary saved! Now, what is your **Full Name**?"
+              : "¡Excelente, resumen guardado! Ahora, ¿cuál es tu **Nombre Completo**?";
+            return jsonResponse({ reply: askName }, corsHeaders);
           } else if (["2", "NO"].includes(inputUpper)) {
-            // Rechazado, retroceder para reescribir
-            userState.step = userState.step === 2.5 ? 2 : 3;
-            const retryMsg = userState.lang === "en" ? "Let's fix it. Enter it again:" : "Corrijámoslo. Ingrésalo nuevamente:";
-            await env.CHAT_STATE_DEMO.put(sessionKey, JSON.stringify({ state: userState, timestamp: now }), { expirationTtl: SESSION_TTL });
-            return new Response(JSON.stringify({ reply: retryMsg }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+            userState.hasAutoSummary = false;
+            userState.leadData.message = "";
+            userState.step = 1; // Pasamos a pedir Nombre, y al final pedirá el mensaje manual
+            await saveState(env, sessionKey, userState, now);
+            const askNameManual = userState.lang === "en"
+              ? "No problem, you will write it manually at the end. First, what is your **Full Name**?"
+              : "Sin problema, lo escribirás manualmente al final. Primero, ¿cuál es tu **Nombre Completo**?";
+            return jsonResponse({ reply: askNameManual }, corsHeaders);
           } else {
-            const promptVerify = userState.lang === "en" ? "Please confirm: 1️⃣ Yes / 2️⃣ No" : "Por favor confirma: 1️⃣ Sí / 2️⃣ No";
-            return new Response(JSON.stringify({ reply: promptVerify }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+            const retrySummary = userState.lang === "en"
+              ? "Please select an option:\n1️⃣ **Approve summary**\n2️⃣ **Write it manually later**"
+              : "Por favor selecciona una opción:\n1️⃣ **Aprobar resumen**\n2️⃣ **Escribirlo manualmente después**";
+            return jsonResponse({ reply: retrySummary }, corsHeaders);
           }
         }
 
-        // PASO 1: Captura de Nombre
+        // --- PASO 1: CAPTURA DE NOMBRE ---
         if (userState.step === 1) {
           const err = validateField(1, input, userState.lang);
-          if (err) return new Response(JSON.stringify({ reply: err }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-          
+          if (err) {
+            await saveState(env, sessionKey, userState, now);
+            return jsonResponse({ reply: err }, corsHeaders);
+          }
+
           userState.leadData.name = input;
-          userState.step = 2; // Siguiente: Email
-          await env.CHAT_STATE_DEMO.put(sessionKey, JSON.stringify({ state: userState, timestamp: now }), { expirationTtl: SESSION_TTL });
+          userState.step = 2;
+          await saveState(env, sessionKey, userState, now);
 
           const reply = userState.lang === "en"
             ? `Great, **${input}**. What is your **Email Address**?`
             : `Mucho gusto, **${input}**. ¿Cuál es tu **Correo Electrónico**?`;
-          return new Response(JSON.stringify({ reply }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          return jsonResponse({ reply }, corsHeaders);
         }
 
-        // PASO 2: Captura de Email + Doble Verificación (2.5)
-        else if (userState.step === 2) {
+        // --- PASO 2: CAPTURA DE EMAIL ---
+        if (userState.step === 2) {
           const err = validateField(2, input, userState.lang);
-          if (err) return new Response(JSON.stringify({ reply: err }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          if (err) {
+            await saveState(env, sessionKey, userState, now);
+            return jsonResponse({ reply: err }, corsHeaders);
+          }
 
           userState.leadData.email = input;
-          userState.step = 2.5; // Estado de verificación de Email
-          await env.CHAT_STATE_DEMO.put(sessionKey, JSON.stringify({ state: userState, timestamp: now }), { expirationTtl: SESSION_TTL });
+          userState.step = 2.5; // Vamos a doble verificación de Email
+          await saveState(env, sessionKey, userState, now);
 
           const reply = userState.lang === "en"
-            ? `You entered: **${input}**\nIs this correct?\n1️⃣ **Yes**\n2️⃣ **No (Change it)**`
+            ? `You entered: **${input}**\nIs this correct?\n1️⃣ **Yes**\n2️⃣ **No (Correct it)**`
             : `Ingresaste: **${input}**\n¿Es correcto?\n1️⃣ **Sí**\n2️⃣ **No (Corregir)**`;
-          return new Response(JSON.stringify({ reply }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          return jsonResponse({ reply }, corsHeaders);
         }
 
-        // PASO 3: Captura de Teléfono + Doble Verificación (3.5)
-        else if (userState.step === 3) {
+        // --- PASO 2.5: DOBLE VERIFICACIÓN DE EMAIL ---
+        if (userState.step === 2.5) {
+          if (["1", "SÍ", "SI", "YES"].includes(inputUpper)) {
+            userState.step = 3; // Avanza a Teléfono
+            await saveState(env, sessionKey, userState, now);
+            const askPhone = userState.lang === "en"
+              ? "Confirmed. What is your **Phone Number / WhatsApp** (min. 7 digits)?"
+              : "Confirmado. ¿Cuál es tu **Teléfono / WhatsApp** (mínimo 7 dígitos)?";
+            return jsonResponse({ reply: askPhone }, corsHeaders);
+          } else if (["2", "NO"].includes(inputUpper)) {
+            userState.step = 2; // Regresa a pedir Email
+            await saveState(env, sessionKey, userState, now);
+            const retryEmail = userState.lang === "en"
+              ? "Let's fix it. Please enter your **Email Address** again:"
+              : "Corrijámoslo. Ingresa tu **Correo Electrónico** nuevamente:";
+            return jsonResponse({ reply: retryEmail }, corsHeaders);
+          } else {
+            await saveState(env, sessionKey, userState, now);
+            const promptVerify = userState.lang === "en" ? "Please confirm your email: 1️⃣ Yes / 2️⃣ No" : "Por favor confirma tu correo: 1️⃣ Sí / 2️⃣ No";
+            return jsonResponse({ reply: promptVerify }, corsHeaders);
+          }
+        }
+
+        // --- PASO 3: CAPTURA DE TELÉFONO ---
+        if (userState.step === 3) {
           const err = validateField(3, input, userState.lang);
-          if (err) return new Response(JSON.stringify({ reply: err }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          if (err) {
+            await saveState(env, sessionKey, userState, now);
+            return jsonResponse({ reply: err }, corsHeaders);
+          }
 
           userState.leadData.phone = input;
-          userState.step = 3.5; // Estado de verificación de Teléfono
-          await env.CHAT_STATE_DEMO.put(sessionKey, JSON.stringify({ state: userState, timestamp: now }), { expirationTtl: SESSION_TTL });
+          userState.step = 3.5; // Vamos a doble verificación de Teléfono
+          await saveState(env, sessionKey, userState, now);
 
           const reply = userState.lang === "en"
-            ? `You entered phone: **${input}**\nIs this correct?\n1️⃣ **Yes**\n2️⃣ **No (Change it)**`
+            ? `You entered phone: **${input}**\nIs this correct?\n1️⃣ **Yes**\n2️⃣ **No (Correct it)**`
             : `Ingresaste el teléfono: **${input}**\n¿Es correcto?\n1️⃣ **Sí**\n2️⃣ **No (Corregir)**`;
-          return new Response(JSON.stringify({ reply }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          return jsonResponse({ reply }, corsHeaders);
         }
 
-        // PASO 4: Captura de Empresa
-        else if (userState.step === 4) {
+        // --- PASO 3.5: DOBLE VERIFICACIÓN DE TELÉFONO ---
+        if (userState.step === 3.5) {
+          if (["1", "SÍ", "SI", "YES"].includes(inputUpper)) {
+            userState.step = 4; // Avanza a Empresa
+            await saveState(env, sessionKey, userState, now);
+            const askCompany = userState.lang === "en"
+              ? "Confirmed. What is your **Company / Organization** name?"
+              : "Confirmado. ¿Cuál es el nombre de tu **Empresa / Organización**?";
+            return jsonResponse({ reply: askCompany }, corsHeaders);
+          } else if (["2", "NO"].includes(inputUpper)) {
+            userState.step = 3; // Regresa a pedir Teléfono
+            await saveState(env, sessionKey, userState, now);
+            const retryPhone = userState.lang === "en"
+              ? "Let's fix it. Please enter your **Phone Number** again:"
+              : "Corrijámoslo. Ingresa tu **Número de Teléfono** nuevamente:";
+            return jsonResponse({ reply: retryPhone }, corsHeaders);
+          } else {
+            await saveState(env, sessionKey, userState, now);
+            const promptVerify = userState.lang === "en" ? "Please confirm your phone: 1️⃣ Yes / 2️⃣ No" : "Por favor confirma tu teléfono: 1️⃣ Sí / 2️⃣ No";
+            return jsonResponse({ reply: promptVerify }, corsHeaders);
+          }
+        }
+
+        // --- PASO 4: CAPTURA DE EMPRESA ---
+        if (userState.step === 4) {
           const err = validateField(4, input, userState.lang);
-          if (err) return new Response(JSON.stringify({ reply: err }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          if (err) {
+            await saveState(env, sessionKey, userState, now);
+            return jsonResponse({ reply: err }, corsHeaders);
+          }
 
           userState.leadData.company = input;
-          userState.step = 5; // Siguiente: País
-          await env.CHAT_STATE_DEMO.put(sessionKey, JSON.stringify({ state: userState, timestamp: now }), { expirationTtl: SESSION_TTL });
+          userState.step = 5;
+          await saveState(env, sessionKey, userState, now);
 
           const reply = userState.lang === "en" ? "What **Country** are you located in?" : "¿De qué **País** nos escribes?";
-          return new Response(JSON.stringify({ reply }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          return jsonResponse({ reply }, corsHeaders);
         }
 
-        // PASO 5: Captura de País -> Lleva al Mensaje del Proyecto
-        else if (userState.step === 5) {
+        // --- PASO 5: CAPTURA DE PAÍS ---
+        if (userState.step === 5) {
           const err = validateField(5, input, userState.lang);
-          if (err) return new Response(JSON.stringify({ reply: err }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          if (err) {
+            await saveState(env, sessionKey, userState, now);
+            return jsonResponse({ reply: err }, corsHeaders);
+          }
 
           userState.leadData.country = input;
-          userState.step = 6; // Siguiente: Mensaje / Caso de Uso
-          await env.CHAT_STATE_DEMO.put(sessionKey, JSON.stringify({ state: userState, timestamp: now }), { expirationTtl: SESSION_TTL });
+
+          // Si ya aprobó un resumen generado por IA en el paso 0.5, saltamos directo a la revisión final (Paso 7)
+          if (userState.hasAutoSummary && userState.leadData.message) {
+            userState.step = 7;
+            await saveState(env, sessionKey, userState, now);
+            return jsonResponse({ reply: buildFinalReview(userState) }, corsHeaders);
+          }
+
+          // Si no, pedimos el mensaje manualmente (Paso 6)
+          userState.step = 6;
+          await saveState(env, sessionKey, userState, now);
 
           const reply = userState.lang === "en"
             ? "Finally, describe your **Automation Use Case / Project** (Max 600 chars):"
             : "Por último, describe brevemente tu **Caso de Uso / Proyecto** (Máx. 600 caracteres):";
-          return new Response(JSON.stringify({ reply }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          return jsonResponse({ reply }, corsHeaders);
         }
 
-        // PASO 6: Recepción del Mensaje / Bifurcación con IA (Resumen Automático)
-        else if (userState.step === 6) {
-          let projectMessage = input;
-
-          // Si el usuario venía conversando y presionó AGENDAR, el sistema generó un resumen previo.
-          // Validamos longitud estricta del mensaje resultante (máx 600 caracteres)
-          const err = validateField(6, projectMessage, userState.lang);
+        // --- PASO 6: CAPTURA MANUAL DE MENSAJE DEL PROYECTO ---
+        if (userState.step === 6) {
+          const err = validateField(6, input, userState.lang);
           if (err) {
-            userState.step = 6;
-            await env.CHAT_STATE_DEMO.put(sessionKey, JSON.stringify({ state: userState, timestamp: now }), { expirationTtl: SESSION_TTL });
-            return new Response(JSON.stringify({ reply: err }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+            await saveState(env, sessionKey, userState, now);
+            return jsonResponse({ reply: err }, corsHeaders);
           }
 
-          userState.leadData.message = projectMessage;
-          userState.step = 7; // Paso 7: Revisión final previa a guardar en D1
-          await env.CHAT_STATE_DEMO.put(sessionKey, JSON.stringify({ state: userState, timestamp: now }), { expirationTtl: SESSION_TTL });
+          userState.leadData.message = input;
+          userState.step = 7;
+          await saveState(env, sessionKey, userState, now);
 
-          const ld = userState.leadData;
-          const reviewMsg = userState.lang === "en"
-            ? `📋 **Final Review of your Lead Data:**\n\n- **Name:** ${ld.name}\n- **Email:** ${ld.email}\n- **Phone:** ${ld.phone}\n- **Company:** ${ld.company}\n- **Country:** ${ld.country}\n- **Message:** ${ld.message}\n\nDo you want to confirm and send this data?\n7️⃣ **Confirm and Send**\n8️⃣ **Cancel / Modify**`
-            : `📋 **Revisión Final de tus Datos:**\n\n- **Nombre:** ${ld.name}\n- **Correo:** ${ld.email}\n- **Teléfono:** ${ld.phone}\n- **Empresa:** ${ld.company}\n- **País:** ${ld.country}\n- **Mensaje:** ${ld.message}\n\n¿Deseas confirmar y registrar estos datos?\n7️⃣ **Confirmar y Enviar**\n8️⃣ **Cancelar / Modificar**`;
-
-          return new Response(JSON.stringify({ reply: reviewMsg }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          return jsonResponse({ reply: buildFinalReview(userState) }, corsHeaders);
         }
 
-        // PASO 7 y 8: Cierre y Control del Lead (Guardado en D1 y Google Sheets en segundo plano)
-        else if (userState.step === 7) {
+        // --- PASO 7: REVISIÓN FINAL Y CIERRE (7️⃣ Confirmar / 8️⃣ Cancelar) ---
+        if (userState.step === 7) {
           if (["7", "CONFIRMAR", "ENVIAR", "CONFIRM", "SEND"].includes(inputUpper)) {
-            let insertStatus = "success";
-            let errorMessage = "";
-
-            // 1. Guardar en Base de Datos D1 (Si está configurada en env.DB)
+            
+            // 1. Guardar en Base de Datos D1 (si existe el binding env.DB)
             if (env.DB) {
               try {
                 await env.DB.prepare(
@@ -280,8 +380,7 @@ export default {
                   userState.leadData.language
                 ).run();
               } catch (dbErr) {
-                console.error("D1 Error:", dbErr.message);
-                // No detenemos el flujo principal si D1 falla, pero registramos el warning
+                console.error("D1 Insert Error:", dbErr.message);
               }
             }
 
@@ -293,27 +392,38 @@ export default {
                   headers: { "Content-Type": "text/plain;charset=utf-8" },
                   body: JSON.stringify(userState.leadData),
                   redirect: "follow"
-                }).catch(e => console.error("Google Sheets Background Sync Error:", e))
+                }).catch(e => console.error("Google Sheets Sync Error:", e))
               );
             }
 
-            // Limpiar estado de sesión
-            await env.CHAT_STATE_DEMO.delete(sessionKey);
+            // Reiniciamos el paso a 0 pero conservamos el idioma e historial
+            userState.step = 0;
+            userState.hasAutoSummary = false;
+            await saveState(env, sessionKey, userState, now);
 
             const successMsg = userState.lang === "en"
-              ? `✅ **Lead Successfully Logged!**\n\nThank you! Your details have been saved securely.\n\n📊 **View live Google Sheet:**\n${PUBLIC_GOOGLE_SHEET_URL}\n\n*(Type **'MENU'** to restart)*`
-              : `✅ **¡Lead Registrado con Éxito!**\n\n¡Gracias! Tus datos han sido guardados de forma segura.\n\n📊 **Ver hoja de cálculo en vivo:**\n${PUBLIC_GOOGLE_SHEET_URL}\n\n*(Escribe **'MENU'** para reiniciar)*`;
+              ? `✅ **Lead Successfully Logged!**\n\nThank you **${userState.leadData.name}**! Your details have been saved to D1 and synced with Google Sheets.\n\n📊 **View live Google Sheet:**\n${PUBLIC_GOOGLE_SHEET_URL}\n\n*(Type **'MENU'** to restart or keep asking technical questions)*`
+              : `✅ **¡Lead Registrado con Éxito!**\n\n¡Gracias **${userState.leadData.name}**! Tus datos han sido guardados en D1 y sincronizados con Google Sheets.\n\n📊 **Ver hoja de cálculo en vivo:**\n${PUBLIC_GOOGLE_SHEET_URL}\n\n*(Escribe **'MENU'** para reiniciar o sigue haciendo consultas técnicas)*`;
 
-            return new Response(JSON.stringify({ reply: successMsg }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+            return jsonResponse({ reply: successMsg }, corsHeaders);
 
           } else if (["8", "CANCELAR", "CANCEL", "MODIFICAR"].includes(inputUpper)) {
-            await env.CHAT_STATE_DEMO.delete(sessionKey);
-            return new Response(JSON.stringify({ 
-              reply: userState.lang === "en" ? "Process cancelled. Type 'SCHEDULE' to start over." : "Proceso cancelado. Escribe 'AGENDAR' para iniciar nuevamente." 
-            }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+            // Cancela limpiamente sin perder el hilo ni el historial de conversación con la IA
+            userState.step = 0;
+            userState.hasAutoSummary = false;
+            await saveState(env, sessionKey, userState, now);
+
+            const cancelMsg = userState.lang === "en"
+              ? "🚫 **Registration cancelled.** We haven't lost our chat thread—feel free to keep asking questions or type **'SCHEDULE'** whenever you're ready."
+              : "🚫 **Registro cancelado.** No hemos perdido el hilo de nuestra charla; puedes seguir haciendo consultas o escribir **'AGENDAR'** cuando estés listo.";
+            return jsonResponse({ reply: cancelMsg }, corsHeaders);
+
           } else {
-            const promptChoice = userState.lang === "en" ? "Please choose: 7️⃣ Confirm and Send / 8️⃣ Cancel" : "Por favor elige: 7️⃣ Confirmar y Enviar / 8️⃣ Cancelar";
-            return new Response(JSON.stringify({ reply: promptChoice }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+            await saveState(env, sessionKey, userState, now);
+            const promptChoice = userState.lang === "en"
+              ? "⚠️ Invalid option. Please reply with:\n7️⃣ **Confirm and Send**\n8️⃣ **Cancel / Modify**"
+              : "⚠️ Opción no válida. Por favor responde con:\n7️⃣ **Confirmar y Enviar**\n8️⃣ **Cancelar / Modificar**";
+            return jsonResponse({ reply: promptChoice }, corsHeaders);
           }
         }
       }
@@ -322,10 +432,9 @@ export default {
       // B. MENÚ GENERAL Y CONSULTAS IA (step === 0)
       // ===================================================================
 
-      // Cambio manual de idioma
-      if (["LANG ES", "ESPAÑOL", "SPANISH", "/ES", "1"].includes(inputUpper) && !input.includes("AGENDAR")) {
+      if (["LANG ES", "ESPAÑOL", "SPANISH", "/ES"].includes(inputUpper)) {
         userState.lang = "es";
-      } else if (["LANG EN", "ENGLISH", "INGLES", "/EN", "2"].includes(inputUpper)) {
+      } else if (["LANG EN", "ENGLISH", "INGLES", "/EN"].includes(inputUpper)) {
         userState.lang = "en";
       }
 
@@ -334,56 +443,73 @@ export default {
 
       // 4. BIFURCACIÓN INTELIGENTE AL AGENDAR
       if (["TEST", "DEMO", "AGENDAR", "SCHEDULE"].includes(inputUpper)) {
-        userState.step = 1; // Iniciar paso 1 (Nombre)
-        
-        let initialMessage = "";
-        // Si hay historial técnico previo con la IA, usamos Llama 3.1 para resumir la charla en primera persona (< 600 chars)
-        if (userState.history && userState.history.length > 2 && env.AI_DEMO) {
+        let generatedSummary = "";
+
+        // Si hubo conversación técnica previa con la IA, generamos un resumen en primera persona (< 600 chars)
+        if (userState.history && userState.history.length >= 2 && env.AI_DEMO) {
           try {
-            const summaryPrompt = [
-              { role: "system", content: "Summarize the user's technical questions and automation interests from this chat history into a concise first-person project description (under 500 characters)." },
-              ...userState.history
-            ];
-            const aiSummary = await env.AI_DEMO.run("@cf/meta/llama-3.1-8b-instruct-fp8", { messages: summaryPrompt });
+            const summarySystemPrompt = userState.lang === "en"
+              ? "Summarize ONLY the user's software automation, AI, or data engineering needs from the conversation into a single concise paragraph in FIRST PERSON ('I am looking to...'). Ignore off-topic banter. Strictly under 500 characters. No bullet points."
+              : "Resume ÚNICAMENTE las necesidades técnicas de automatización, IA o datos del usuario de esta conversación en un solo párrafo breve en PRIMERA PERSONA ('Busco implementar...'). Ignora temas fuera de contexto. Estrictamente menos de 500 caracteres. Sin viñetas.";
+
+            const aiSummary = await env.AI_DEMO.run("@cf/meta/llama-3.1-8b-instruct-fp8", {
+              messages: [
+                { role: "system", content: summarySystemPrompt },
+                ...userState.history
+              ]
+            });
+
             if (aiSummary?.response) {
-              initialMessage = aiSummary.response.trim();
+              generatedSummary = aiSummary.response.trim().slice(0, 580);
             }
           } catch (e) {
             console.error("AI Summary Error:", e);
           }
         }
 
-        if (initialMessage) {
-          // Si se autogeneró un resumen técnico exitoso, lo pre-cargamos y pasamos directo a pedir los datos de contacto
-          userState.leadData.message = initialMessage;
+        // Si se generó resumen, vamos al Paso 0.5 para que el usuario lo apruebe o decida escribirlo manualmente
+        if (generatedSummary) {
+          userState.leadData.message = generatedSummary;
+          userState.step = 0.5;
+          await saveState(env, sessionKey, userState, now);
+
+          const approvalMsg = userState.lang === "en"
+            ? `📥 **Lead Capture Demo**\n\nBased on our chat, I drafted this project summary for your request:\n> *"${generatedSummary}"*\n\nWould you like to use this summary?\n1️⃣ **Yes, use this summary**\n2️⃣ **No, I'll write it myself**`
+            : `📥 **Demostración de Captura de Lead**\n\nBasado en nuestra charla, redacté este resumen para tu solicitud:\n> *"${generatedSummary}"*\n\n¿Deseas usar este resumen?\n1️⃣ **Sí, aprobar resumen**\n2️⃣ **No, prefiero escribirlo manualmente**`;
+
+          return jsonResponse({ reply: approvalMsg }, corsHeaders);
         }
 
-        await env.CHAT_STATE_DEMO.put(sessionKey, JSON.stringify({ state: userState, timestamp: now }), { expirationTtl: SESSION_TTL });
+        // Si entró directo sin charla previa, vamos directo al Paso 1 (Nombre)
+        userState.step = 1;
+        userState.hasAutoSummary = false;
+        await saveState(env, sessionKey, userState, now);
 
-        const reply = userState.lang === "en"
-          ? `📥 **Lead Capture Demo**\n${initialMessage ? `_Auto-generated project summary from our chat:_ "${initialMessage}"\n\n` : ""}What is your **Full Name / Company**?`
-          : `📥 **Demostración de Captura de Lead**\n${initialMessage ? `_Resumen de tu proyecto basado en el chat:_ "${initialMessage}"\n\n` : ""}¿Cuál es tu **Nombre Completo / Empresa**?`;
+        const directMsg = userState.lang === "en"
+          ? "📥 **Lead Capture Demo (Google Sheets & D1)**\n\nWhat is your **Full Name**?"
+          : "📥 **Demostración de Captura de Lead (Google Sheets & D1)**\n\nPara comenzar con el registro, ¿cuál es tu **Nombre Completo**?";
 
-        return new Response(JSON.stringify({ reply }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        return jsonResponse({ reply: directMsg }, corsHeaders);
       }
 
-      // Manejo de Menú Principal / Bienvenida
+      // Opciones del Menú Principal
       let reply = "";
-      if (!input || inputUpper === "MENU") {
+      if (inputUpper === "MENU") {
+        userState.history = [];
         reply = t.welcome;
       } else if (input === "1" || inputUpper === "ES") {
         userState.lang = "es";
-        await env.CHAT_STATE_DEMO.put(sessionKey, JSON.stringify({ state: userState, timestamp: now }), { expirationTtl: SESSION_TTL });
-        reply = t.intro;
+        userState.leadData.language = "es";
+        reply = locales.es.intro;
       } else if (input === "2" || inputUpper === "EN") {
         userState.lang = "en";
-        await env.CHAT_STATE_DEMO.put(sessionKey, JSON.stringify({ state: userState, timestamp: now }), { expirationTtl: SESSION_TTL });
-        reply = t.intro;
+        userState.leadData.language = "en";
+        reply = locales.en.intro;
       } else {
-        // Guardar historial temporal de la conversación para la memoria de Llama 3.1
+        // Consulta libre a Llama 3.1 con memoria reciente
         if (!userState.history) userState.history = [];
         userState.history.push({ role: "user", content: input });
-        if (userState.history.length > 6) userState.history.shift(); // Mantener últimos 6 mensajes
+        if (userState.history.length > 6) userState.history.shift();
 
         const aiResponse = await env.AI_DEMO.run("@cf/meta/llama-3.1-8b-instruct-fp8", {
           messages: [
@@ -396,18 +522,21 @@ export default {
         userState.history.push({ role: "assistant", content: aiResponse.response });
       }
 
-      await env.CHAT_STATE_DEMO.put(sessionKey, JSON.stringify({ state: userState, timestamp: now }), { expirationTtl: SESSION_TTL });
-
-      return new Response(JSON.stringify({ reply }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      await saveState(env, sessionKey, userState, now);
+      return jsonResponse({ reply }, corsHeaders);
 
     } catch (err) {
       console.error("Worker Global Error:", err);
-      return new Response(JSON.stringify({ reply: "Error procesando la solicitud en el Worker. ⚠️" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResponse({ reply: "Error procesando la solicitud en el Worker. ⚠️" }, corsHeaders, 500);
     }
   }
 };
+
+// Helper para construir la pantalla de Revisión Final (Paso 7)
+function buildFinalReview(userState) {
+  const ld = userState.leadData;
+  if (userState.lang === "en") {
+    return `📋 **Final Review of your Lead Data:**\n\n- **Name:** ${ld.name}\n- **Email:** ${ld.email}\n- **Phone:** ${ld.phone}\n- **Company:** ${ld.company}\n- **Country:** ${ld.country}\n- **Message:** ${ld.message}\n\nDo you want to confirm and send this data?\n7️⃣ **Confirm and Send**\n8️⃣ **Cancel / Modify**`;
+  }
+  return `📋 **Revisión Final de tus Datos:**\n\n- **Nombre:** ${ld.name}\n- **Correo:** ${ld.email}\n- **Teléfono:** ${ld.phone}\n- **Empresa:** ${ld.company}\n- **País:** ${ld.country}\n- **Mensaje:** ${ld.message}\n\n¿Deseas confirmar y registrar estos datos?\n7️⃣ **Confirmar y Enviar**\n8️⃣ **Cancelar / Modificar**`;
+}

@@ -70,9 +70,6 @@ omnichannel-ai-agent-ecosystem/
 ├── src/
 │   └── workers/
 │       ├── index.js   
-│       └── locales/
-│           ├── en.js   
-│           └── es.js   
 └── wrangler.toml       
 ```
 ---
