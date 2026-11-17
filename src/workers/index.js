@@ -1,5 +1,5 @@
 // =========================================================================
-// CONFIGURACIÓN GLOBAL
+// CONFIGURACIÓN GLOBAL (Cambia el modelo o parámetros en un solo lugar)
 // =========================================================================
 const AI_MODEL = "@cf/google/gemma-4-26b-a4b-it"; // Alternativas: "@cf/qwen/qwen3.8-27b", "@cf/deepseek-ai/deepseek-v4.1-flash-1017"
 const PUBLIC_GOOGLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/19_ITGf-0SJcMiJMvE5Ih7O7TzCo7bbUdqcHuiiuxn6g/edit?usp=sharing";
@@ -76,17 +76,25 @@ function validateField(step, value, lang) {
   return null;
 }
 
-// Helper para limpiar posibles etiquetas de razonamiento interno (<think>)
-function cleanAIOutput(text) {
-  return (text || "").replace(/<think>[\s\S]*?<\/think>/g, "").trim();
+// =========================================================================
+// HELPERS DE IA, KV Y RESPUESTAS HTTP
+// =========================================================================
+function extractAIResponse(aiResult) {
+  if (!aiResult) return "";
+
+  // Soporta formato nuevo OpenAI-compatible (Gemma 4 / Qwen 3.8 / DeepSeek) y formato clásico (.response)
+  const rawText =
+    aiResult?.choices?.[0]?.message?.content ||
+    aiResult?.response ||
+    (typeof aiResult === "string" ? aiResult : "");
+
+  return rawText.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
 }
 
-// Helper para guardar estado en KV
 async function saveState(env, key, state, now) {
   await env.CHAT_STATE_DEMO.put(key, JSON.stringify({ state, timestamp: now }), { expirationTtl: KV_HARD_TTL_SEC });
 }
 
-// Helper para responder JSON con CORS
 function jsonResponse(payload, corsHeaders, status = 200) {
   return new Response(JSON.stringify(payload), {
     status,
@@ -94,6 +102,17 @@ function jsonResponse(payload, corsHeaders, status = 200) {
   });
 }
 
+function buildFinalReview(userState) {
+  const ld = userState.leadData;
+  if (userState.lang === "en") {
+    return `📋 **Final Review of your Lead Data:**\n\n- **Name:** ${ld.name}\n- **Email:** ${ld.email}\n- **Phone:** ${ld.phone}\n- **Company:** ${ld.company}\n- **Country:** ${ld.country}\n- **Message:** ${ld.message}\n\nDo you want to confirm and send this data?\n7️⃣ **Confirm and Send**\n8️⃣ **Cancel / Modify**`;
+  }
+  return `📋 **Revisión Final de tus Datos:**\n\n- **Nombre:** ${ld.name}\n- **Correo:** ${ld.email}\n- **Teléfono:** ${ld.phone}\n- **Empresa:** ${ld.company}\n- **País:** ${ld.country}\n- **Mensaje:** ${ld.message}\n\n¿Deseas confirmar y registrar estos datos?\n7️⃣ **Confirmar y Enviar**\n8️⃣ **Cancelar / Modificar**`;
+}
+
+// =========================================================================
+// HANDLER PRINCIPAL DEL WORKER
+// =========================================================================
 export default {
   async fetch(request, env, ctx) {
     const appsScriptUrl = env.GOOGLE_APPS_SCRIPT_WEBAPP_URL;
@@ -137,7 +156,7 @@ export default {
       if (userState && (userState.step > 0 || (userState.history && userState.history.length > 0)) && (now - lastAccess > INACTIVITY_LIMIT_SEC)) {
         const expiredLang = userState.lang || "es";
         const tExpired = locales[expiredLang];
-        
+
         const resetState = {
           step: 0,
           lang: expiredLang,
@@ -368,7 +387,7 @@ export default {
         // --- PASO 7: REVISIÓN FINAL Y CIERRE (7️⃣ Confirmar / 8️⃣ Cancelar) ---
         if (userState.step === 7) {
           if (["7", "CONFIRMAR", "ENVIAR", "CONFIRM", "SEND"].includes(inputUpper)) {
-            
+
             if (env.DB) {
               try {
                 await env.DB.prepare(
@@ -458,8 +477,9 @@ export default {
               ]
             });
 
-            if (aiSummary?.response) {
-              generatedSummary = cleanAIOutput(aiSummary.response).slice(0, 580);
+            const extractedSummary = extractAIResponse(aiSummary);
+            if (extractedSummary) {
+              generatedSummary = extractedSummary.slice(0, 580);
             }
           } catch (e) {
             console.error("AI Summary Error:", e);
@@ -514,7 +534,7 @@ export default {
           ],
         });
 
-        const cleanedText = cleanAIOutput(aiResponse.response);
+        const cleanedText = extractAIResponse(aiResponse) || "⚠️ No se pudo generar una respuesta en este momento.";
         reply = `🤖 **MARLA:** ${cleanedText}`;
         userState.history.push({ role: "assistant", content: cleanedText });
       }
@@ -528,12 +548,3 @@ export default {
     }
   }
 };
-
-// Helper para construir la pantalla de Revisión Final (Paso 7)
-function buildFinalReview(userState) {
-  const ld = userState.leadData;
-  if (userState.lang === "en") {
-    return `📋 **Final Review of your Lead Data:**\n\n- **Name:** ${ld.name}\n- **Email:** ${ld.email}\n- **Phone:** ${ld.phone}\n- **Company:** ${ld.company}\n- **Country:** ${ld.country}\n- **Message:** ${ld.message}\n\nDo you want to confirm and send this data?\n7️⃣ **Confirm and Send**\n8️⃣ **Cancel / Modify**`;
-  }
-  return `📋 **Revisión Final de tus Datos:**\n\n- **Nombre:** ${ld.name}\n- **Correo:** ${ld.email}\n- **Teléfono:** ${ld.phone}\n- **Empresa:** ${ld.company}\n- **País:** ${ld.country}\n- **Mensaje:** ${ld.message}\n\n¿Deseas confirmar y registrar estos datos?\n7️⃣ **Confirmar y Enviar**\n8️⃣ **Cancelar / Modificar**`;
-}
