@@ -1,5 +1,13 @@
 // =========================================================================
-// 🌐 DICCIONARIOS DE IDIOMA INCORPORADOS 
+// CONFIGURACIÓN GLOBAL
+// =========================================================================
+const AI_MODEL = "@cf/google/gemma-4-26b-a4b-it"; // Alternativas: "@cf/qwen/qwen3.8-27b", "@cf/deepseek-ai/deepseek-v4.1-flash-1017"
+const PUBLIC_GOOGLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/19_ITGf-0SJcMiJMvE5Ih7O7TzCo7bbUdqcHuiiuxn6g/edit?usp=sharing";
+const INACTIVITY_LIMIT_SEC = 300; // 5 minutos exactos de inactividad
+const KV_HARD_TTL_SEC = 86400;    // 24 horas en KV para poder detectar y avisar la expiración
+
+// =========================================================================
+// DICCIONARIOS DE IDIOMA INCORPORADOS
 // =========================================================================
 const locales = {
   es: {
@@ -24,12 +32,8 @@ STRICT RULES:
   }
 };
 
-const PUBLIC_GOOGLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/19_ITGf-0SJcMiJMvE5Ih7O7TzCo7bbUdqcHuiiuxn6g/edit?usp=sharing";
-const INACTIVITY_LIMIT_SEC = 300; // 5 minutos exactos de inactividad
-const KV_HARD_TTL_SEC = 86400;    // 24 horas en KV para poder detectar y avisar la expiración
-
 // =========================================================================
-// 🛡️ FUNCIONES DE VALIDACIÓN ESTRICTA (QA)
+// FUNCIONES DE VALIDACIÓN ESTRICTA (QA)
 // =========================================================================
 function validateField(step, value, lang) {
   const v = (value || "").trim();
@@ -70,6 +74,11 @@ function validateField(step, value, lang) {
       break;
   }
   return null;
+}
+
+// Helper para limpiar posibles etiquetas de razonamiento interno (<think>)
+function cleanAIOutput(text) {
+  return (text || "").replace(/<think>[\s\S]*?<\/think>/g, "").trim();
 }
 
 // Helper para guardar estado en KV
@@ -125,12 +134,10 @@ export default {
       const lastAccess = rawData?.timestamp || 0;
 
       // 6. CONTROL DE INACTIVIDAD MEJORADO (5 minutos / 300s)
-      // Detecta inactividad tanto en el formulario como en charla activa con la IA
       if (userState && (userState.step > 0 || (userState.history && userState.history.length > 0)) && (now - lastAccess > INACTIVITY_LIMIT_SEC)) {
         const expiredLang = userState.lang || "es";
         const tExpired = locales[expiredLang];
         
-        // Reiniciamos el estado manteniendo su idioma previo
         const resetState = {
           step: 0,
           lang: expiredLang,
@@ -165,7 +172,6 @@ export default {
       // ===================================================================
       if (userState.step > 0) {
 
-        // Escape general en cualquier paso (excepto cuando ya estamos en el menú 7/8 donde '8' tiene su propia lógica)
         if (["CANCELAR", "CANCEL", "EXIT", "MENU"].includes(inputUpper)) {
           userState.step = 0;
           userState.hasAutoSummary = false;
@@ -176,11 +182,11 @@ export default {
           return jsonResponse({ reply: cancelReply }, corsHeaders);
         }
 
-        // --- PASO 0.5: APROBACIÓN DEL RESUMEN IA (Si venía de charla previa) ---
+        // --- PASO 0.5: APROBACIÓN DEL RESUMEN IA ---
         if (userState.step === 0.5) {
           if (["1", "SÍ", "SI", "YES"].includes(inputUpper)) {
             userState.hasAutoSummary = true;
-            userState.step = 1; // Pasamos a pedir Nombre
+            userState.step = 1;
             await saveState(env, sessionKey, userState, now);
             const askName = userState.lang === "en"
               ? "Great, summary saved! Now, what is your **Full Name**?"
@@ -189,7 +195,7 @@ export default {
           } else if (["2", "NO"].includes(inputUpper)) {
             userState.hasAutoSummary = false;
             userState.leadData.message = "";
-            userState.step = 1; // Pasamos a pedir Nombre, y al final pedirá el mensaje manual
+            userState.step = 1;
             await saveState(env, sessionKey, userState, now);
             const askNameManual = userState.lang === "en"
               ? "No problem, you will write it manually at the end. First, what is your **Full Name**?"
@@ -230,7 +236,7 @@ export default {
           }
 
           userState.leadData.email = input;
-          userState.step = 2.5; // Vamos a doble verificación de Email
+          userState.step = 2.5;
           await saveState(env, sessionKey, userState, now);
 
           const reply = userState.lang === "en"
@@ -242,14 +248,14 @@ export default {
         // --- PASO 2.5: DOBLE VERIFICACIÓN DE EMAIL ---
         if (userState.step === 2.5) {
           if (["1", "SÍ", "SI", "YES"].includes(inputUpper)) {
-            userState.step = 3; // Avanza a Teléfono
+            userState.step = 3;
             await saveState(env, sessionKey, userState, now);
             const askPhone = userState.lang === "en"
               ? "Confirmed. What is your **Phone Number / WhatsApp** (min. 7 digits)?"
               : "Confirmado. ¿Cuál es tu **Teléfono / WhatsApp** (mínimo 7 dígitos)?";
             return jsonResponse({ reply: askPhone }, corsHeaders);
           } else if (["2", "NO"].includes(inputUpper)) {
-            userState.step = 2; // Regresa a pedir Email
+            userState.step = 2;
             await saveState(env, sessionKey, userState, now);
             const retryEmail = userState.lang === "en"
               ? "Let's fix it. Please enter your **Email Address** again:"
@@ -271,7 +277,7 @@ export default {
           }
 
           userState.leadData.phone = input;
-          userState.step = 3.5; // Vamos a doble verificación de Teléfono
+          userState.step = 3.5;
           await saveState(env, sessionKey, userState, now);
 
           const reply = userState.lang === "en"
@@ -283,14 +289,14 @@ export default {
         // --- PASO 3.5: DOBLE VERIFICACIÓN DE TELÉFONO ---
         if (userState.step === 3.5) {
           if (["1", "SÍ", "SI", "YES"].includes(inputUpper)) {
-            userState.step = 4; // Avanza a Empresa
+            userState.step = 4;
             await saveState(env, sessionKey, userState, now);
             const askCompany = userState.lang === "en"
               ? "Confirmed. What is your **Company / Organization** name?"
               : "Confirmado. ¿Cuál es el nombre de tu **Empresa / Organización**?";
             return jsonResponse({ reply: askCompany }, corsHeaders);
           } else if (["2", "NO"].includes(inputUpper)) {
-            userState.step = 3; // Regresa a pedir Teléfono
+            userState.step = 3;
             await saveState(env, sessionKey, userState, now);
             const retryPhone = userState.lang === "en"
               ? "Let's fix it. Please enter your **Phone Number** again:"
@@ -329,14 +335,12 @@ export default {
 
           userState.leadData.country = input;
 
-          // Si ya aprobó un resumen generado por IA en el paso 0.5, saltamos directo a la revisión final (Paso 7)
           if (userState.hasAutoSummary && userState.leadData.message) {
             userState.step = 7;
             await saveState(env, sessionKey, userState, now);
             return jsonResponse({ reply: buildFinalReview(userState) }, corsHeaders);
           }
 
-          // Si no, pedimos el mensaje manualmente (Paso 6)
           userState.step = 6;
           await saveState(env, sessionKey, userState, now);
 
@@ -365,7 +369,6 @@ export default {
         if (userState.step === 7) {
           if (["7", "CONFIRMAR", "ENVIAR", "CONFIRM", "SEND"].includes(inputUpper)) {
             
-            // 1. Guardar en Base de Datos D1 (si existe el binding env.DB)
             if (env.DB) {
               try {
                 await env.DB.prepare(
@@ -384,7 +387,6 @@ export default {
               }
             }
 
-            // 2. Sincronización en segundo plano con Google Sheets (ctx.waitUntil)
             if (appsScriptUrl) {
               ctx.waitUntil(
                 fetch(appsScriptUrl, {
@@ -396,7 +398,6 @@ export default {
               );
             }
 
-            // Reiniciamos el paso a 0 pero conservamos el idioma e historial
             userState.step = 0;
             userState.hasAutoSummary = false;
             await saveState(env, sessionKey, userState, now);
@@ -408,7 +409,6 @@ export default {
             return jsonResponse({ reply: successMsg }, corsHeaders);
 
           } else if (["8", "CANCELAR", "CANCEL", "MODIFICAR"].includes(inputUpper)) {
-            // Cancela limpiamente sin perder el hilo ni el historial de conversación con la IA
             userState.step = 0;
             userState.hasAutoSummary = false;
             await saveState(env, sessionKey, userState, now);
@@ -445,14 +445,13 @@ export default {
       if (["TEST", "DEMO", "AGENDAR", "SCHEDULE"].includes(inputUpper)) {
         let generatedSummary = "";
 
-        // Si hubo conversación técnica previa con la IA, generamos un resumen en primera persona (< 600 chars)
         if (userState.history && userState.history.length >= 2 && env.AI_DEMO) {
           try {
             const summarySystemPrompt = userState.lang === "en"
               ? "Summarize ONLY the user's software automation, AI, or data engineering needs from the conversation into a single concise paragraph in FIRST PERSON ('I am looking to...'). Ignore off-topic banter. Strictly under 500 characters. No bullet points."
               : "Resume ÚNICAMENTE las necesidades técnicas de automatización, IA o datos del usuario de esta conversación en un solo párrafo breve en PRIMERA PERSONA ('Busco implementar...'). Ignora temas fuera de contexto. Estrictamente menos de 500 caracteres. Sin viñetas.";
 
-            const aiSummary = await env.AI_DEMO.run("@cf/meta/llama-3.1-8b-instruct-fp8", {
+            const aiSummary = await env.AI_DEMO.run(AI_MODEL, {
               messages: [
                 { role: "system", content: summarySystemPrompt },
                 ...userState.history
@@ -460,14 +459,13 @@ export default {
             });
 
             if (aiSummary?.response) {
-              generatedSummary = aiSummary.response.trim().slice(0, 580);
+              generatedSummary = cleanAIOutput(aiSummary.response).slice(0, 580);
             }
           } catch (e) {
             console.error("AI Summary Error:", e);
           }
         }
 
-        // Si se generó resumen, vamos al Paso 0.5 para que el usuario lo apruebe o decida escribirlo manualmente
         if (generatedSummary) {
           userState.leadData.message = generatedSummary;
           userState.step = 0.5;
@@ -480,7 +478,6 @@ export default {
           return jsonResponse({ reply: approvalMsg }, corsHeaders);
         }
 
-        // Si entró directo sin charla previa, vamos directo al Paso 1 (Nombre)
         userState.step = 1;
         userState.hasAutoSummary = false;
         await saveState(env, sessionKey, userState, now);
@@ -506,20 +503,20 @@ export default {
         userState.leadData.language = "en";
         reply = locales.en.intro;
       } else {
-        // Consulta libre a Llama 3.1 con memoria reciente
         if (!userState.history) userState.history = [];
         userState.history.push({ role: "user", content: input });
         if (userState.history.length > 6) userState.history.shift();
 
-        const aiResponse = await env.AI_DEMO.run("@cf/meta/llama-3.1-8b-instruct-fp8", {
+        const aiResponse = await env.AI_DEMO.run(AI_MODEL, {
           messages: [
             { role: "system", content: `${t.aiSystemPrompt}\n\nHoja pública de consulta: ${PUBLIC_GOOGLE_SHEET_URL}` },
             ...userState.history
           ],
         });
 
-        reply = `🤖 **MARLA:** ${aiResponse.response}`;
-        userState.history.push({ role: "assistant", content: aiResponse.response });
+        const cleanedText = cleanAIOutput(aiResponse.response);
+        reply = `🤖 **MARLA:** ${cleanedText}`;
+        userState.history.push({ role: "assistant", content: cleanedText });
       }
 
       await saveState(env, sessionKey, userState, now);
